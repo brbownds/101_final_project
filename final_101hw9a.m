@@ -152,5 +152,5 @@ N0 = T0 / Ts;                        % Number of samples in one period
 %%%%%%%%%%%%%%%%%%%%%
 %                   %
 %    UNFINISHED!    %
-%                   %
+%                   % 
 %%%%%%%%%%%%%%%%%%%%% 
