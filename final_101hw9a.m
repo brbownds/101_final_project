@@ -51,20 +51,20 @@ fprintf('Question 1): \na0 = %.3f, \nA = %.3f, \nT0 = %.3f\n', a0, A, T0);
 %% Question 2): Plot magX vs f (Hz), plot magX vs k (-500 to 499).
 
 % Defining parameters
-x_samples = x(1:1000);              % First 1000 consecutive samples from x(t)
-k = -500:499;                       % Given DFT index 
-[X, f] = fdomain(x_samples, Fs);    % Call fdomain.m
+x_samples = x(1:1000);                      % First 1000 consecutive samples from x(t)
+k = -500:499;                               % Given DFT index 
+[X_samples, f] = fdomain(x_samples, Fs);    % Call fdomain.m
 
 % Plot magX vs f (Hz)
 figure(2);
-plot(f, abs(X), 'b', 'LineWidth', 2);
+plot(f, abs(X_samples), 'b', 'LineWidth', 2);
 xlabel('Frequency (Hz)', 'FontSize', 20); ylabel('|X(f)|', 'FontSize', 20);
 title('Magnitude Spectrum |X(f)| vs Frequency', 'FontSize', 20);
 grid on;
 
 % Plot magX vs k (-500 to 499)
 figure(3);
-plot(k, abs(X), 'r', 'LineWidth', 2);
+plot(k, abs(X_samples), 'r', 'LineWidth', 2);
 xlabel('k', 'FontSize', 20); ylabel('|X(k)|', 'FontSize', 20);
 title('Magnitude Spectrum |X(k)| vs Index', 'FontSize', 20);
 grid on;
@@ -76,16 +76,14 @@ fprintf('\nQuestion 2): \nCheck plots in Git Repository\n');
 
 %% Question 3): Determine f0 from Question 2) and from f0 = 1/T0. Explain discrepancies.
 
-% FFT of x_samples
-X_samples = fft(x_samples);         % FFT of first 1000 consecutive samples          
-magX = abs(X_samples);              % Magnitude of X (FFT)             
-
+% Use the same samples from Question 2 where it's X_samples = fft(x_samples)          
+magX = abs(fftshift(X_samples));              % Magnitude of X (FFT)             
 magX(1) = 0;                        % Omit DC value for fundamental frequency, not an avg value
 maxVal = max(magX);                 % Find max magnitude and its index
 idx = find(magX == maxVal, 1);      % Find index of first occurrence of max (signal peak)
 
 % Convert index to freq
-f0 = (idx - 1) * (Fs / length(x_samples));  
+f0 = (idx - 1) * (Fs / length(x_samples));  % Subtract 1 since MATLAB indexes from 1
 T0_fft = 1 / f0;
 
 fprintf('\nQuestion 3): \nf0 = %.4f Hz, \nT0_fft = %.4f s, \nT0 = %.4f s\n', f0, T0_fft, T0);
@@ -94,9 +92,9 @@ fprintf('\nQuestion 3): \nf0 = %.4f Hz, \nT0_fft = %.4f s, \nT0 = %.4f s\n', f0,
 % SOLUTION: T0_fft = 0.0943 s, 
 % SOLUTION: T0 = 0.0900 s
 
-% Explanation: The small, 0.0043 difference between T0_fft and T0 is due to
+% Explanation: The small difference of 0.0043 between T0_fft and T0 is due to
 % the FFT providing a discrete approximation of the frequency of x(T). T0 
-% is measured direclty from the time-domain rising edges, which reflects the
+% is measured directly from the time-domain rising edges, which reflects the
 % actual pulse timing, whereas T0_fft is affected by the freq resolution
 % of the FFT, sample length, and possible noise. T0 should be trusted more
 % since it gives a more accurate measure of the period (T0 = 1 / f0).
@@ -104,18 +102,12 @@ fprintf('\nQuestion 3): \nf0 = %.4f Hz, \nT0_fft = %.4f s, \nT0 = %.4f s\n', f0,
 %% Question 4): Determine spectrum of 1000pt Hanning, plot Plot magX vs f (Hz), plot magX vs k (-500 to 499).
 
 % Defining paramters
-hanning_win = hann(1000);           % Create Hanning window (1000pt)
-x_hann = x_samples .* hanning_win;  % Define x_hann
+hanning_window = hann(1000);           % Create Hanning window (1000pt)
+x_hann = x_samples .* hanning_window;  % Define x_hann
 
 % FFT of windowed signal
-X_hann = fft(x_hann);              
-magX_hann = abs(X_hann);            
-X_shift = fftshift(X_hann);         % Shift zero-frequency to center
-
-% Frequency vector
-Fs = 1 / Ts;                        
-N_hann = length(x_samples);              
-f_hann = (0:N_hann-1)*(Fs/N_hann);  % Frequency axis (Hz)                      
+[X_hann, f_hann] = fdomain(x_hann, Fs);    % Call fdomain.m
+magX_hann = abs(X_hann);                                
 
 % Plot magnitude vs frequency (Hz)
 figure(4);
@@ -130,7 +122,7 @@ figure(5);
 % Recall:
 k = -500:499; 
 
-plot(k, abs(X_shift), 'r', 'LineWidth', 2);
+plot(k, abs(X_hann), 'r', 'LineWidth', 2);
 xlabel('k', 'FontSize', 20); ylabel('|X_{hann}(k)|', 'FontSize', 20);
 title('Magnitude Spectrum |X_{hann}(k)| vs Index', 'FontSize', 20);
 grid on;
@@ -141,16 +133,28 @@ fprintf('\nQuestion 4): \nCheck plots in Git Repository\n');
 % SOLUTION: Plot in Git Repository (Index)
 
 %% Question 5): Calculate DTFS coefficients (a_k) for one period of x(t).
-
 % Recall: A = 5.0000, a0 = 3.2381, T0 = 0.0900 s, Ts = 0.01 s
 
 % Define parameters
-d = a0 / A;                          % Duty cycle = a0 / A =  N1 / N0 
-N1 = d * N0;                         % Number of samples per period when signal is ON
-N0 = T0 / Ts;                        % Number of samples in one period
+T1 = 0.05;
+N1 = T1 / 0.01;
+N0 = T0 / 0.01;
+d_1 = N1 / N0;
+d_2 = a0 / A;              % Duty cycle = a0 / A =  5.828 so N1 = 6
 
-%%%%%%%%%%%%%%%%%%%%%
-%                   %
-%    UNFINISHED!    %
-%                   % 
-%%%%%%%%%%%%%%%%%%%%% 
+% Calculate the magnitude of the DTFS coefficients so k = 1,2,3 and 4
+k = [1, 2, 3, 4];
+
+a_k = abs((A./N0).*sin(k.*pi.*d_1)./(sin(k.*pi./(N0))));
+
+fprintf('\nQuestion 5i): \nCalculated |a_{k}| for k = [1, 4]\n \na_k = %.3f, %.3f, %.3f, %.3f\n', ...
+    a_k(1), a_k(2), a_k(3), a_k(4));
+
+%% 5ii)
+% Now we calculate when d = a0/A
+a_k = abs((A./N0).*sin(k.*pi.*d_2)./(sin(k.*pi./(N0))));
+
+fprintf('\nQuestion 5ii): \nCalculated |a_{k}| for k = [1, 4]\n \na_k = %.3f, %.3f, %.3f, %.3f\n', ...
+    ak(1), ak(2), ak(3), ak(4));
+%% 5iii)
+% 
