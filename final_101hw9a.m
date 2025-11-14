@@ -71,13 +71,11 @@ grid on;
 
 fprintf('\nQuestion 2): \nCheck plots in Git Repository\n');
 
-% SOLUTION: Plot in Git Repository (Freq)
-% SOLUTION: Plot in Git Repository (Index)
 
 %% Question 3): Determine f0 from Question 2) and from f0 = 1/T0. Explain discrepancies.
 
 % Use the same samples from Question 2 where it's X_samples = fft(x_samples)          
-magX = abs(fftshift(X_samples));              % Magnitude of X (FFT)             
+magX = abs(fftshift(X_samples));    % Magnitude of X (FFT)             
 magX(1) = 0;                        % Omit DC value for fundamental frequency, not an avg value
 maxVal = max(magX);                 % Find max magnitude and its index
 idx = find(magX == maxVal, 1);      % Find index of first occurrence of max (signal peak)
@@ -129,9 +127,6 @@ grid on;
 
 fprintf('\nQuestion 4): \nCheck plots in Git Repository\n');
 
-% SOLUTION: Plot in Git Repository (Freq)
-% SOLUTION: Plot in Git Repository (Index)
-
 %% Question 5): Calculate DTFS coefficients (a_k) for one period of x(t).
 % Recall: A = 5.0000, a0 = 3.2381, T0 = 0.0900 s, Ts = 0.01 s
 
@@ -147,14 +142,43 @@ k = [1, 2, 3, 4];
 
 a_k = abs((A./N0).*sin(k.*pi.*d_1)./(sin(k.*pi./(N0))));
 
-fprintf('\nQuestion 5i): \nCalculated |a_{k}| for k = [1, 4]\n \na_k = %.3f, %.3f, %.3f, %.3f\n', ...
-    a_k(1), a_k(2), a_k(3), a_k(4));
-
+fprintf('\nQuestion 5i): Calculated |a_{k}| for k = [1, 4]\n');
+fprintf('a_k = %.3f, %.3f, %.3f, %.3f\n', a_k);
 %% 5ii)
 % Now we calculate when d = a0/A
-a_k = abs((A./N0).*sin(k.*pi.*d_2)./(sin(k.*pi./(N0))));
+ak = abs((A./N0).*sin(k.*pi.*d_2)./(sin(k.*pi./(N0))));
 
-fprintf('\nQuestion 5ii): \nCalculated |a_{k}| for k = [1, 4]\n \na_k = %.3f, %.3f, %.3f, %.3f\n', ...
-    ak(1), ak(2), ak(3), ak(4));
-%% 5iii)
-% 
+fprintf('\nQuestion 5ii): Calculated |a_{k}| for k = [1, 4]\n');
+fprintf('a_k = %.3f, %.3f, %.3f, %.3f\n', ak);
+%% 5iii) Get the first 4 harmonic magnitudes directly from FFT WITHOUT windowing
+% Use same variable x_samples = x(1:1000)
+% Also we can use the same frequencies "f" from Question 2
+
+% By inspection from our graph in Question 2 we see our first major
+% harmonic is when idx = 107 and therefore we know the second harmonic occurs
+% at 2*idx because of k*idx.
+
+Xpos = X_samples(1:500);
+magX_pos = abs(Xpos); 
+magX_pos(1) = 0; % ignore DC
+Np1 = idx;
+harmonic_bins = k .* Np1;               % compute harmonic bins
+harmonic_mags = magX_pos(harmonic_bins); % get magnitudes
+
+fprintf('\nQuestion 5iii): Calculated |a_{k}| for k = [1, 4] WITHOUT windowing\n \na_k = %.3f, %.3f, %.3f, %.3f\n', harmonic_mags);
+
+%% 5iv) Get the first 4 harmonic magnitudes directly from FFT WITH windowing
+
+% Recycle the windowing from Question 4 as well where we need X_hann.
+% By inspection from our graph in Question 2 we see our first major
+% harmonic is when idx = 107 and therefore we know the second harmonic occurs
+% at 2*idx because of k*idx.
+X_pos = X_hann(1:500);
+magXpos = abs(Xpos); 
+magXpos(1) = 0; % ignore DC
+
+Np2 = 106;                               % computed through Figure 5)
+harmon_bins = k .* Np2;                % compute harmonic bins
+harmonic_ak = magXpos(harmon_bins); % get magnitudes
+
+fprintf('\nQuestion 5iv): Calculated |a_{k}| for k = [1, 4] WITH windowing\n \n a_k = %.3f, %.3f, %.3f, %.3f \n', harmonic_ak);
